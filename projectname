@@ -1,0 +1,4 @@
+#!/bin/bash
+project_path=$(pwd)
+project_name="${project_path##*/}"
+echo $project_name

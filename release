@@ -1,0 +1,27 @@
+#!/bin/bash
+SUDO="sudo"
+if [[ "$whoami" == "root" ]] ; then
+    SUDO=""
+fi
+
+VER="latest"
+PROJECT_NAME=$1
+BRANCH=$2
+if [[ $BRANCH == "" ]] ; then
+    PROJECT_NAME="`projectname`"
+    if [[ $BRANCH == "" ]] ; then
+        if [[ $1 == "" ]] ; then
+            BRANCH="master"
+            VER="latest"
+        else
+            BRANCH=$1
+            VER=$1
+        fi
+    else
+        BRANCH=$1
+        VER=$2
+    fi
+fi
+echo "Release $PROJECT_NAME:$VER"
+$SUDO docker tag  $PROJECT_NAME:$VER 10.33.31.12:5000/$PROJECT_NAME:$VER
+$SUDO docker push 10.33.31.12:5000/$PROJECT_NAME:$VER

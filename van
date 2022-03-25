@@ -1,0 +1,12 @@
+#!/bin/bash
+APP=$1
+BASE_PATH=$(dirname $(ls -la `which troop` | awk -F '->' '{print $2}') )
+source $BASE_PATH/common.sh
+if [[ $APP == "" ]] ; then
+    APP=$(projectname)
+fi
+
+if [[ $APP == "" ]] ; then
+     APP= "`projectname`"
+fi
+MSG=$($SUDO docker stop $APP && $SUDO docker rm $APP )

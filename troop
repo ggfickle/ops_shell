@@ -1,0 +1,78 @@
+#!/bin/bash
+VER="latest"
+PROJECT_NAME=$1
+BRANCH=$2
+VER=$3
+DIR=`pwd`
+SUDO="sudo"
+if [[ "$whoami" == "root" ]] ; then
+    SUDO=""
+else
+    if [ ! -f ~/.m2/settings.xml ]; then
+        echo -e "Prepare maven settings ";
+        mkdir -p ~/.m2
+        sudo cp /root/.m2/settings.xml ~/.m2/settings.xml
+        sudo chmod 755 ~/.m2/settings.xml
+        echo "done"
+    fi
+fi
+if [[ $VER == "" ]] ; then
+    PROJECT_NAME="`projectname`"
+    if [[ $BRANCH == "" ]] ; then
+        if [[ $1 == "" ]] ; then
+            BRANCH="master"
+            VER="latest"
+        else
+            BRANCH=$1
+            VER=$1
+        fi
+    else
+        BRANCH=$1
+        VER=$2
+    fi
+fi
+#echo $DIR
+echo "Git last code from branch $BRANCH..."
+git checkout master
+git pull
+git checkout $BRANCH
+git pull
+if [ -f build.sh ] ; then
+    echo "Found build.sh try to build..."
+    sh build.sh
+else 
+    if [ -f pom.xml ] ; then
+        echo "Build project using maven"
+        if [ -d target ] ; then
+            rm -r target
+        fi
+        mvn -U clean package -Dmaven.test.skip=true
+        if [ $? -eq 0 ] ; then
+            echo "Build success"
+        else
+            exit 2
+        fi
+    fi
+fi
+IMG="$PROJECT_NAME:$VER"
+DOCKERFILE="Dockerfile"
+echo -e "Clear old image $IMG ... "
+   MSG=$($SUDO docker image rm $IMG 2>&1)
+echo "Done"
+
+echo "Build docker target $IMG"
+if [ ! -f $DOCKERFILE ] ; then
+    DOCKERFILE="dockerfile"
+    if [ ! -f $DOCKERFILE ] ; then
+        echo "Error ! Dockerfile not found ! "
+        exit 1
+    fi
+fi
+$SUDO docker build -t $IMG $DIR
+echo "Done !"
+
+if [ -f startup.sh ] ; then
+    echo "Try to launch $PROJECT_NAME"
+    van $PROJECT_NAME
+    sh startup.sh $VER
+fi

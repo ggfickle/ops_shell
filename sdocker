@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+BASE_PATH=$(dirname $(ls -la `which troop` | awk -F '->' '{print $2}') )
+source $BASE_PATH/common.sh
+
+$SUDO docker $*
